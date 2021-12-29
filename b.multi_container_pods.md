@@ -85,7 +85,7 @@ initContainers:
 - args:
   - /bin/sh
   - -c
-  - wget -O /work-dir/index.html http://neverssl.com/online
+  - "wget -O /work-dir/index.html http://neverssl.com/online"
   image: busybox
   name: box
   volumeMounts:
@@ -96,35 +96,42 @@ initContainers:
 In total you get:
 
 ```YAML
-
 apiVersion: v1
 kind: Pod
 metadata:
+  creationTimestamp: null
   labels:
-    run: box
-  name: box
+    run: web
+  name: web
 spec:
-  initContainers: 
-  - args: 
-    - /bin/sh 
-    - -c 
-    - wget -O /work-dir/index.html http://neverssl.com/online 
-    image: busybox 
-    name: box 
-    volumeMounts: 
-    - name: vol 
-      mountPath: /work-dir 
+  restartPolicy: Never
+  automountServiceAccountToken: false
+  dnsConfig:
+    nameservers:
+      - 8.8.8.8
+  initContainers:
+  - name: box
+    image: busybox
+    args:
+    - /bin/sh
+    - -c
+    - "wget -O /work-dir/index.html http://neverssl.com/online"
+    volumeMounts:
+    - name: vol
+      mountPath: /work-dir
+
   containers:
   - image: nginx
-    name: nginx
+    name: web
     ports:
     - containerPort: 80
-    volumeMounts: 
-    - name: vol 
-      mountPath: /usr/share/nginx/html 
-  volumes: 
-  - name: vol 
-    emptyDir: {} 
+    volumeMounts:
+    - name: vol
+      mountPath: /usr/share/nginx/html
+
+  volumes:
+  - name: vol
+    emptyDir: {}
 ```
 
 ```bash
